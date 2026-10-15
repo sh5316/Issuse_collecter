@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>경제 뉴스</title>
+<meta name="description" content="해외 경제 뉴스를 모아 한국어 번역과 국내 증시 영향을 분석하는 웹앱" />
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface-2: #eef2f9;
+    --border: #d9e0ec;
+    --text: #1a2230;
+    --muted: #5b6676;
+    --primary: #2563eb;
+    --primary-weak: #e4edff;
+    --pos: #1f9d55;
+    --pos-weak: #e3f6ec;
+    --neg: #d93838;
+    --neg-weak: #fbe6e6;
+    --shadow: 0 1px 3px rgba(20, 30, 50, .08);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0e1420;
+      --surface: #161d2b;
+      --surface-2: #1d2636;
+      --border: #2a3444;
+      --text: #e7ecf4;
+      --muted: #9aa6b8;
+      --primary: #5b8dff;
+      --primary-weak: #1b2740;
+      --pos: #46c97e;
+      --pos-weak: #15311f;
+      --neg: #f0706f;
+      --neg-weak: #3a1b1b;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1420;
+    --surface: #161d2b;
+    --surface-2: #1d2636;
+    --border: #2a3444;
+    --text: #e7ecf4;
+    --muted: #9aa6b8;
+    --primary: #5b8dff;
+    --primary-weak: #1b2740;
+    --pos: #46c97e;
+    --pos-weak: #15311f;
+    --neg: #f0706f;
+    --neg-weak: #3a1b1b;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+      "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.5;
+  }
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+  }
+  .top-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 1.25rem; margin: 0; }
+  .sub { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .spacer { flex: 1; }
+  button, select, input[type="text"] {
+    font: inherit; color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 12px; cursor: pointer;
+  }
+  button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  button:hover { filter: brightness(1.03); }
+  .icon-btn { padding: 7px 10px; }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .filters .group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .filters label.chk { display: inline-flex; align-items: center; gap: 5px;
+    font-size: .86rem; cursor: pointer; user-select: none; }
+  .filters .lbl { font-size: .8rem; color: var(--muted); font-weight: 600; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab {
+    padding: 9px 16px; border-radius: 10px 10px 0 0; border: 1px solid var(--border);
+    border-bottom: none; background: var(--surface-2); color: var(--muted);
+    font-weight: 600; font-size: .92rem;
+  }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+  .status { font-size: .88rem; color: var(--muted); margin: 4px 2px 14px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card a.title { color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.02rem; }
+  .card a.title:hover { color: var(--primary); text-decoration: underline; }
+  .ko { color: var(--primary); font-size: .95rem; margin-top: 4px; }
+  .meta { color: var(--muted); font-size: .78rem; margin-top: 7px; display: flex;
+    flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .pill { background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 1px 9px; font-size: .74rem; }
+  .src { background: var(--primary-weak); color: var(--primary); border: none;
+    border-radius: 6px; padding: 1px 7px; font-weight: 600; }
+
+  /* analysis */
+  .verdict { font-size: 1.6rem; font-weight: 800; }
+  .verdict small { font-size: .5em; color: var(--muted); font-weight: 600; }
+  .metrics { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .metric { flex: 1; min-width: 120px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
+  .metric .num { font-size: 1.5rem; font-weight: 800; }
+  .metric .cap { color: var(--muted); font-size: .8rem; }
+  .gauge { height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-2);
+    border: 1px solid var(--border); margin: 10px 0 4px; position: relative; }
+  .gauge > i { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--text); }
+  .gauge-grad { position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--neg), #d9b24a, var(--pos)); opacity: .35; }
+  h3.sec { margin: 22px 0 10px; font-size: 1.05rem; }
+  .catline { padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .catline .reason { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+  .tag { font-size: .78rem; font-weight: 700; padding: 1px 8px; border-radius: 6px; }
+  .tag.pos { background: var(--pos-weak); color: var(--pos); }
+  .tag.neg { background: var(--neg-weak); color: var(--neg); }
+  .tag.neu { background: var(--surface-2); color: var(--muted); }
+  .sectors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sector { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; box-shadow: var(--shadow); }
+  .sector .reason { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+  .disclaimer { color: var(--muted); font-size: .8rem; margin-top: 20px; padding: 12px;
+    background: var(--surface-2); border-radius: 10px; }
+
+  .loader { text-align: center; padding: 40px; color: var(--muted); }
+  .hidden { display: none; }
+
+  @media (max-width: 640px) {
+    .sectors { grid-template-columns: 1fr; }
+    h1 { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-row wrap" style="padding-top:0;padding-bottom:0;">
+    <div>
+      <h1>🌍 해외 경제 뉴스</h1>
+      <div class="sub">국채금리 · 금리 · 경제상황 · 세계증시 · 전쟁 · 원유가격</div>
+    </div>
+    <div class="spacer"></div>
+    <button id="themeBtn" class="icon-btn" title="테마 전환">🌓</button>
+    <button id="refreshBtn" class="primary">🔄 새로고침</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters">
+    <div class="group" id="catFilters"><span class="lbl">카테고리</span></div>
+    <div class="group">
+      <span class="lbl">기간</span>
+      <select id="dateSel">
+        <option value="all">전체</option>
+        <option value="today">오늘</option>
+        <option value="24h">최근 24시간</option>
+        <option value="3d">최근 3일</option>
+        <option value="7d">최근 7일</option>
+      </select>
+    </div>
+    <div class="group">
+      <span class="lbl">검색</span>
+      <input type="text" id="kw" placeholder="제목 검색어" />
+    </div>
+    <div class="group">
+      <label class="chk"><input type="checkbox" id="trChk" checked /> 🇰🇷 번역</label>
+    </div>
+    <div class="group">
+      <label class="chk"><input type="checkbox" id="autoChk" /> ⏱️ 자동</label>
+      <select id="autoSel" disabled>
+        <option value="5">5분</option>
+        <option value="10" selected>10분</option>
+        <option value="15">15분</option>
+        <option value="30">30분</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="news">📰 뉴스 목록</div>
+    <div class="tab" data-tab="analysis">📊 국내 증시 영향 분석</div>
+  </div>
+
+  <div id="status" class="status">뉴스를 불러오는 중…</div>
+
+  <div id="newsView"><div class="loader">⏳ 수집 중…</div></div>
+  <div id="analysisView" class="hidden"></div>
+</div>
+
+<script>
+// ===========================================================================
+// 1. 카테고리 정의
+// ===========================================================================
+const CATEGORIES = {
+  "미국 국채금리": { emoji: "🏦", keywords: ["treasury","treasuries","bond yield","bond yields","10-year","10 year","2-year","30-year","yield curve","t-note","t-bond","sovereign bond","government bond"] },
+  "금리": { emoji: "📊", keywords: ["interest rate","interest rates","rate cut","rate hike","rate decision","federal reserve","the fed","fomc","powell","central bank","monetary policy","ecb","boj","bank of england","basis points","benchmark rate"] },
+  "경제상황": { emoji: "🌐", keywords: ["gdp","inflation","deflation","cpi","ppi","pce","recession","unemployment","jobless","jobs report","payroll","economic growth","economic outlook","consumer spending","retail sales","manufacturing","pmi","trade deficit","tariff","tariffs","debt ceiling"] },
+  "세계 증시": { emoji: "📈", keywords: ["stock market","stocks","shares","equities","s&p 500","s&p500","nasdaq","dow jones","wall street","ftse","nikkei","hang seng","dax","shanghai composite","index futures","stock index","sell-off","rally","bull market","bear market"] },
+  "세계 전쟁": { emoji: "⚔️", keywords: ["war","conflict","military","invasion","ukraine","russia","middle east","israel","gaza","iran","sanctions","geopolitical","ceasefire","airstrike","troops","nato","taiwan tension"] },
+  "원유가격": { emoji: "🛢️", keywords: ["oil price","oil prices","crude","brent","wti","opec","opec+","petroleum","barrel","gasoline","energy prices","natural gas","fuel price","shale"] },
+};
+
+// ===========================================================================
+// 2. RSS 피드 (CORS 프록시 경유)
+// ===========================================================================
+function gnews(q) {
+  const query = encodeURIComponent(q + " when:7d");
+  return "https://news.google.com/rss/search?q=" + query + "&hl=en-US&gl=US&ceid=US:en";
+}
+const FEEDS = [
+  ["미국 국채금리", gnews("US treasury yield bond")],
+  ["금리/연준", gnews("federal reserve interest rate fed")],
+  ["경제상황", gnews("US economy inflation GDP recession")],
+  ["세계 증시", gnews("stock market S&P 500 Nasdaq Dow")],
+  ["세계 전쟁", gnews("war conflict geopolitical sanctions")],
+  ["원유가격", gnews("oil price crude OPEC brent")],
+  ["BBC Business", "https://feeds.bbci.co.uk/news/business/rss.xml"],
+  ["Guardian Business", "https://www.theguardian.com/business/rss"],
+  ["OilPrice.com", "https://oilprice.com/rss/main"],
+  ["Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml"],
+];
+
+// ---------------------------------------------------------------------------
+// CORS 프록시 설정
+// 브라우저에서 외부 RSS를 직접 가져오면 CORS에 막히므로 공개 프록시를 경유한다.
+// 공개 프록시는 간헐적으로 불안정할 수 있어 여러 개를 순차 시도(폴백)한다.
+//
+// ★ 가장 안정적으로 쓰려면 본인 소유의 프록시를 아래 CUSTOM_PROXY 에 넣으세요.
+//   (예: 무료 Cloudflare Worker — README의 "안정적인 프록시" 참고)
+//   형식: 요청 URL이 뒤에 encodeURIComponent 로 붙는 형태
+// ---------------------------------------------------------------------------
+const CUSTOM_PROXY = ""; // 예: "https://your-worker.your-name.workers.dev/?url="
+
+const PROXIES = [
+  u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+  u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u),
+  u => "https://cors.eu.org/" + u,
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+];
+
+async function fetchRaw(url) {
+  const list = CUSTOM_PROXY
+    ? [u => CUSTOM_PROXY + encodeURIComponent(u), ...PROXIES]
+    : PROXIES.slice();
+  for (const make of list) {
+    try {
+      const res = await fetch(make(url), { cache: "no-store" });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text && text.includes("<item")) return text;
+    } catch (e) { /* 다음 프록시 시도 */ }
+  }
+  return null;
+}
+
+// ===========================================================================
+// 3. 수집 / 분류
+// ===========================================================================
+function matchCategories(text) {
+  const t = text.toLowerCase();
+  const out = [];
+  for (const [cat, cfg] of Object.entries(CATEGORIES)) {
+    if (cfg.keywords.some(k => t.includes(k))) out.push(cat);
+  }
+  return out;
+}
+
+async function fetchFeed(name, url) {
+  try {
+    const text = await fetchRaw(url);
+    if (!text) return [];
+    const xml = new DOMParser().parseFromString(text, "text/xml");
+    const items = [];
+    xml.querySelectorAll("item").forEach(it => {
+      const title = (it.querySelector("title")?.textContent || "").trim();
+      let link = (it.querySelector("link")?.textContent || "").trim();
+      if (!link) link = it.querySelector("guid")?.textContent || "";
+      const desc = it.querySelector("description")?.textContent || "";
+      const pub = it.querySelector("pubDate")?.textContent || "";
+      if (!title || !link) return;
+      const cats = matchCategories(title + " " + desc);
+      if (!cats.length) return;
+      const d = pub ? new Date(pub) : null;
+      items.push({ title, link, summary: desc, source: name, categories: cats,
+        published: (d && !isNaN(d)) ? d : null });
+    });
+    return items;
+  } catch (e) { return []; }
+}
+
+async function collectNews() {
+  const results = await Promise.all(FEEDS.map(([n, u]) => fetchFeed(n, u)));
+  const all = results.flat();
+  const seen = new Set();
+  const uniq = [];
+  for (const it of all) {
+    const key = it.title.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key); uniq.push(it);
+  }
+  uniq.sort((a, b) => (b.published?.getTime() || 0) - (a.published?.getTime() || 0));
+  return uniq;
+}
+
+// ===========================================================================
+// 4. 번역 (프록시 경유 Google 무료 엔드포인트 + localStorage 캐시)
+// ===========================================================================
+const trCache = {};
+try { Object.assign(trCache, JSON.parse(localStorage.getItem("trCache") || "{}")); } catch (e) {}
+function saveTrCache() { try { localStorage.setItem("trCache", JSON.stringify(trCache)); } catch (e) {} }
+
+async function translate(text) {
+  if (!text) return "";
+  if (trCache[text]) return trCache[text];
+  // translate.googleapis.com(gtx)은 CORS(ACAO:*)를 허용하므로 프록시 없이 직접 호출.
+  const api = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko&dt=t&q="
+    + encodeURIComponent(text.slice(0, 480));
+  try {
+    const res = await fetch(api, { cache: "no-store" });
+    const data = await res.json();
+    const ko = (data[0] || []).map(s => s[0]).filter(Boolean).join("");
+    if (ko) { trCache[text] = ko; saveTrCache(); }
+    return ko;
+  } catch (e) { return ""; }
+}
+
+// 동시 실행 제한 큐
+async function runQueue(tasks, limit = 4) {
+  let i = 0;
+  async function worker() { while (i < tasks.length) { const cur = i++; await tasks[cur](); } }
+  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
+}
+
+// ===========================================================================
+// 5. 국내 증시 영향 분석
+// ===========================================================================
+const IMPACT_RULES = {
+  "미국 국채금리": {
+    pos: ["fall","falls","fell","drop","drops","decline","declines","ease","eases","lower","slip","slips","retreat","down","sink","tumble","slide"],
+    neg: ["rise","rises","rose","rising","climb","climbs","surge","surges","jump","jumps","higher","soar","soars","spike","gain","gains","increase","up"],
+    pr: "미국 국채금리 하락 → 외국인 자금 유입·위험자산 선호로 국내 증시에 긍정적",
+    nr: "미국 국채금리 상승 → 외국인 자금 이탈·원화 약세 압력으로 국내 증시에 부정적" },
+  "금리": {
+    pos: ["cut","cuts","lower","lowers","ease","eases","easing","dovish","pause","pauses","hold","holds","reduce","reduces"],
+    neg: ["hike","hikes","raise","raises","higher","tighten","tightening","hawkish","increase","increases"],
+    pr: "금리 인하·완화 기대 → 유동성 확대로 국내 증시에 긍정적",
+    nr: "금리 인상·긴축 기조 → 유동성 축소로 국내 증시에 부정적" },
+  "경제상황": {
+    pos: ["growth","strong","stronger","beat","beats","robust","recovery","resilient","resilience","expand","expands","expansion","improve","improves","upbeat","solid","boom"],
+    neg: ["recession","slowdown","slows","contraction","weak","weaker","miss","misses","downturn","layoff","layoffs","jobless","shrink","stagnation","crisis","fears","warns","warning"],
+    pr: "글로벌 경기 개선 신호 → 수출 비중 높은 국내 증시에 긍정적",
+    nr: "글로벌 경기 둔화·침체 우려 → 수출 의존도 높은 국내 증시에 부정적" },
+  "세계 증시": {
+    pos: ["rally","rallies","gain","gains","surge","surges","rise","rises","record","jump","jumps","climb","climbs","higher","rebound","rebounds","soar","soars","advance"],
+    neg: ["sell-off","selloff","plunge","plunges","fall","falls","drop","drops","crash","slump","tumble","tumbles","sink","slide","slides","lower","rout","fears"],
+    pr: "글로벌 증시 강세 → 동조화로 코스피·코스닥에 긍정적",
+    nr: "글로벌 증시 약세 → 동조화로 코스피·코스닥에 부정적" },
+  "세계 전쟁": {
+    pos: ["ceasefire","truce","peace","deal","agreement","de-escalate","diplomacy","talks","resolution"],
+    neg: ["war","attack","attacks","invasion","strike","strikes","escalate","escalation","escalates","tension","tensions","conflict","sanction","sanctions","missile","threat","threats","clash","clashes"],
+    pr: "지정학적 긴장 완화 → 위험회피 심리 완화로 국내 증시에 긍정적",
+    nr: "지정학적 긴장 고조 → 안전자산 선호·위험회피로 국내 증시에 부정적" },
+  "원유가격": {
+    pos: ["fall","falls","fell","drop","drops","decline","declines","plunge","plunges","lower","slide","slides","ease","eases","retreat","down","slump"],
+    neg: ["surge","surges","jump","jumps","rise","rises","soar","soars","spike","spikes","higher","climb","climbs","rally","gains","gain","up"],
+    pr: "유가 하락 → 수입물가·기업 원가 부담 완화로 국내 증시에 긍정적",
+    nr: "유가 상승 → 수입물가 상승·원가 부담으로 국내 증시에 부정적" },
+};
+
+function analyzeArticle(n) {
+  const text = (n.title + " " + (n.summary || "")).toLowerCase();
+  const sigs = [];
+  for (const cat of n.categories) {
+    const r = IMPACT_RULES[cat]; if (!r) continue;
+    const p = r.pos.filter(w => text.includes(w)).length;
+    const g = r.neg.filter(w => text.includes(w)).length;
+    if (p > g) sigs.push([cat, 1, r.pr]);
+    else if (g > p) sigs.push([cat, -1, r.nr]);
+  }
+  return sigs;
+}
+
+function analyzeMarket(items) {
+  const catScores = {}, catCounts = {};
+  for (const c of Object.keys(CATEGORIES)) { catScores[c] = 0; catCounts[c] = { pos: 0, neg: 0 }; }
+  let pos = 0, neg = 0; const scored = [];
+  for (const n of items) {
+    const sigs = analyzeArticle(n); if (!sigs.length) continue;
+    let s = 0;
+    for (const [cat, d] of sigs) { catScores[cat] += d; d > 0 ? (catCounts[cat].pos++, pos++) : (catCounts[cat].neg++, neg++); s += d; }
+    scored.push([s, n]);
+  }
+  const total = pos + neg;
+  return { overall: total ? (pos - neg) / total : 0, pos, neg, catScores, catCounts, scored, analyzed: scored.length };
+}
+
+function impactLabel(s) {
+  if (s >= 0.4) return ["📈 매우 긍정적", "pos"];
+  if (s >= 0.15) return ["↗️ 다소 긍정적", "pos"];
+  if (s > -0.15) return ["➡️ 중립", "neu"];
+  if (s > -0.4) return ["↘️ 다소 부정적", "neg"];
+  return ["📉 매우 부정적", "neg"];
+}
+
+function sectorOutlook(cs) {
+  const t = cs["미국 국채금리"], r = cs["금리"], e = cs["경제상황"], s = cs["세계 증시"], w = cs["세계 전쟁"], o = cs["원유가격"];
+  return [
+    ["반도체·IT 수출주", s + e, "글로벌 증시·경기 흐름에 동조"],
+    ["은행·금융", -(r + t), "시장금리 상승 시 예대마진 확대 수혜"],
+    ["성장주·2차전지·바이오", r + t, "금리 상승 시 밸류에이션 부담"],
+    ["방산", -w, "지정학적 긴장 고조 시 수혜"],
+    ["항공·해운·운송", o, "유가 상승 시 연료비 부담"],
+    ["정유·에너지", -o, "유가 상승 시 정제마진·실적 개선"],
+  ];
+}
+
+// ===========================================================================
+// 6. 상태 & 렌더링
+// ===========================================================================
+let NEWS = [];
+let activeTab = "news";
+
+function selectedCats() {
+  return [...document.querySelectorAll("#catFilters input:checked")].map(i => i.value);
+}
+function dateCutoff() {
+  const v = document.getElementById("dateSel").value;
+  const now = new Date();
+  if (v === "today") { const d = new Date(now); d.setHours(0, 0, 0, 0); return d; }
+  if (v === "24h") return new Date(now - 24 * 3600e3);
+  if (v === "3d") return new Date(now - 3 * 864e5);
+  if (v === "7d") return new Date(now - 7 * 864e5);
+  return null;
+}
+function getFiltered() {
+  const cats = selectedCats();
+  const kw = document.getElementById("kw").value.trim().toLowerCase();
+  const cut = dateCutoff();
+  return NEWS.filter(n =>
+    n.categories.some(c => cats.includes(c)) &&
+    (!kw || n.title.toLowerCase().includes(kw)) &&
+    (!cut || (n.published && n.published >= cut))
+  );
+}
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function stripHtml(s) { const d = document.createElement("div"); d.innerHTML = s; return (d.textContent || "").trim(); }
+function fmtDate(d) {
+  if (!d) return "";
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function renderNews(items) {
+  const translate_on = document.getElementById("trChk").checked;
+  const view = document.getElementById("newsView");
+  if (!items.length) { view.innerHTML = '<div class="loader">조건에 맞는 뉴스가 없습니다.</div>'; return; }
+  view.innerHTML = items.map((n, i) => {
+    const badges = n.categories.map(c => `<span class="pill">${CATEGORIES[c].emoji} ${c}</span>`).join("");
+    const when = n.published ? `<span>🕒 ${fmtDate(n.published)}</span>` : "";
+    return `<div class="card">
+      <a class="title" href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a>
+      <div class="ko" id="ko-${i}"></div>
+      <div class="meta"><span class="src">${esc(n.source)}</span>${badges}${when}</div>
+    </div>`;
+  }).join("");
+
+  if (translate_on) {
+    const tasks = items.map((n, i) => async () => {
+      const ko = await translate(n.title);
+      const el = document.getElementById("ko-" + i);
+      if (el && ko) el.textContent = "🇰🇷 " + ko;
+    });
+    runQueue(tasks, 4);
+  }
+}
+
+function renderAnalysis(items) {
+  const translate_on = document.getElementById("trChk").checked;
+  const view = document.getElementById("analysisView");
+  const r = analyzeMarket(items);
+  const [label, cls] = impactLabel(r.overall);
+
+  let html = `<div class="card">
+    <div class="verdict"><span class="tag ${cls}" style="font-size:.9rem">${label}</span>
+      <small> 지수 ${r.overall >= 0 ? "+" : ""}${r.overall.toFixed(2)}</small></div>
+    <div class="gauge"><div class="gauge-grad"></div><i style="left:${((r.overall + 1) / 2 * 100).toFixed(1)}%"></i></div>
+    <div class="metrics">
+      <div class="metric"><div class="num" style="color:var(--pos)">${r.pos}</div><div class="cap">🟢 호재 신호</div></div>
+      <div class="metric"><div class="num" style="color:var(--neg)">${r.neg}</div><div class="cap">🔴 악재 신호</div></div>
+      <div class="metric"><div class="num">${r.analyzed}</div><div class="cap">📄 분석 기사</div></div>
+    </div></div>`;
+
+  if (r.analyzed === 0) {
+    view.innerHTML = html + '<div class="loader">분석할 방향성 뉴스가 없습니다.</div>';
+    return;
+  }
+
+  // 카테고리별
+  html += '<h3 class="sec">📂 카테고리별 영향</h3><div class="card">';
+  for (const [cat, cfg] of Object.entries(CATEGORIES)) {
+    const c = r.catCounts[cat]; if (!c.pos && !c.neg) continue;
+    const net = r.catScores[cat];
+    const tag = net > 0 ? '<span class="tag pos">호재 우세</span>' : net < 0 ? '<span class="tag neg">악재 우세</span>' : '<span class="tag neu">혼조</span>';
+    const reason = net > 0 ? IMPACT_RULES[cat].pr : IMPACT_RULES[cat].nr;
+    html += `<div class="catline"><b>${cfg.emoji} ${cat}</b> ${tag} <span style="color:var(--muted);font-size:.8rem">(호재 ${c.pos} / 악재 ${c.neg})</span><div class="reason">${reason}</div></div>`;
+  }
+  html += "</div>";
+
+  // 업종
+  html += '<h3 class="sec">🏭 국내 업종별 전망 (참고)</h3><div class="sectors">';
+  for (const [name, score, reason] of sectorOutlook(r.catScores)) {
+    const [tag, cls2] = score > 0 ? ["📈 긍정", "pos"] : score < 0 ? ["📉 부정", "neg"] : ["➡️ 중립", "neu"];
+    html += `<div class="sector"><b>${name}</b> <span class="tag ${cls2}">${tag}</span><div class="reason">${reason}</div></div>`;
+  }
+  html += "</div>";
+
+  // 주요 뉴스
+  const sorted = r.scored.slice();
+  const negTop = sorted.slice().sort((a, b) => a[0] - b[0]).filter(x => x[0] < 0).slice(0, 3);
+  const posTop = sorted.slice().sort((a, b) => b[0] - a[0]).filter(x => x[0] > 0).slice(0, 3);
+  const headlineCard = (arr) => arr.map(([, n]) =>
+    `<div class="card" style="padding:10px 14px"><a class="title" style="font-size:.95rem" href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.title)}</a></div>`
+  ).join("") || '<div class="reason" style="color:var(--muted)">해당 없음</div>';
+
+  html += `<h3 class="sec">📰 영향이 큰 주요 뉴스</h3>
+    <div class="tag neg" style="display:inline-block;margin-bottom:6px">주요 악재</div>${headlineCard(negTop)}
+    <div class="tag pos" style="display:inline-block;margin:10px 0 6px">주요 호재</div>${headlineCard(posTop)}`;
+
+  html += `<div class="disclaimer">⚠️ 본 분석은 뉴스 키워드 기반 자동 추정으로 참고용입니다. 실제 투자 판단의 근거가 아니며 투자 책임은 본인에게 있습니다.</div>`;
+
+  view.innerHTML = html;
+}
+
+function rerender() {
+  const items = getFiltered();
+  const dateSel = document.getElementById("dateSel");
+  const dlabel = dateSel.value === "all" ? "" : " · 📅 " + dateSel.options[dateSel.selectedIndex].text;
+  document.getElementById("status").textContent =
+    `총 ${items.length}건${dlabel} (업데이트: ${fmtDate(new Date())})`;
+  if (activeTab === "news") renderNews(items); else renderAnalysis(items);
+}
+
+async function load() {
+  document.getElementById("status").textContent = "뉴스를 불러오는 중…";
+  document.getElementById("newsView").innerHTML = '<div class="loader">⏳ 수집 중… (해외 RSS를 프록시로 가져옵니다)</div>';
+  try {
+    NEWS = await collectNews();
+    if (!NEWS.length) {
+      document.getElementById("newsView").innerHTML =
+        '<div class="loader">뉴스를 가져오지 못했습니다. 잠시 후 새로고침해 주세요.<br>(공개 프록시 서버가 일시적으로 불안정할 수 있습니다.)</div>';
+      document.getElementById("status").textContent = "수집 실패";
+      return;
+    }
+    rerender();
+  } catch (e) {
+    document.getElementById("newsView").innerHTML = '<div class="loader">오류: ' + esc(String(e)) + "</div>";
+  }
+}
+
+// ===========================================================================
+// 7. 초기화 / 이벤트
+// ===========================================================================
+(function initCats() {
+  const box = document.getElementById("catFilters");
+  for (const [cat, cfg] of Object.entries(CATEGORIES)) {
+    const l = document.createElement("label"); l.className = "chk";
+    l.innerHTML = `<input type="checkbox" value="${cat}" checked> ${cfg.emoji} ${cat}`;
+    box.appendChild(l);
+  }
+})();
+
+document.getElementById("catFilters").addEventListener("change", rerender);
+document.getElementById("dateSel").addEventListener("change", rerender);
+document.getElementById("kw").addEventListener("input", rerender);
+document.getElementById("trChk").addEventListener("change", rerender);
+document.getElementById("refreshBtn").addEventListener("click", load);
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    activeTab = tab.dataset.tab;
+    document.getElementById("newsView").classList.toggle("hidden", activeTab !== "news");
+    document.getElementById("analysisView").classList.toggle("hidden", activeTab !== "analysis");
+    rerender();
+  });
+});
+
+// 자동 새로고침
+let autoTimer = null;
+function setupAuto() {
+  const on = document.getElementById("autoChk").checked;
+  const sel = document.getElementById("autoSel");
+  sel.disabled = !on;
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+  if (on) autoTimer = setInterval(load, parseInt(sel.value, 10) * 60000);
+}
+document.getElementById("autoChk").addEventListener("change", setupAuto);
+document.getElementById("autoSel").addEventListener("change", setupAuto);
+
+// 테마
+const themeBtn = document.getElementById("themeBtn");
+try { const saved = localStorage.getItem("theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("theme", next); } catch (e) {}
+});
+
+load();
+</script>
+</body>
+</html>

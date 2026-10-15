@@ -53,6 +53,49 @@ GitHub 저장소를 그대로 연결해 공개 URL로 실행할 수 있습니다
 > 필요한 패키지는 `requirements.txt`, 앱 설정은 `.streamlit/config.toml`에서
 > 클라우드가 자동으로 읽어갑니다.
 
+## 🧩 두 가지 버전
+
+| 버전 | 파일 | 실행 방식 | 특징 |
+|------|------|-----------|------|
+| **파이썬 웹앱** | `newsapp.py` | Streamlit 서버 | 가장 안정적 (서버가 RSS 수집) |
+| **정적 HTML** | `index.html` | 브라우저만으로 실행 | 서버 불필요, GitHub Pages 호스팅 가능 |
+
+### 정적 HTML 버전 (`index.html`)
+- 파이썬·서버 없이 브라우저에서 바로 열립니다 (더블클릭 또는 호스팅).
+- 번역은 CORS를 허용하는 Google 엔드포인트를 **직접** 호출합니다.
+- RSS는 브라우저 CORS 제약 때문에 **공개 CORS 프록시**를 경유합니다
+  (allorigins·codetabs 등 여러 개를 순차 시도).
+
+> ⚠️ 공개 프록시는 간헐적으로 느리거나 실패할 수 있습니다. **100% 안정적으로
+> 쓰려면 본인 소유의 무료 프록시(Cloudflare Worker)를 만들어** `index.html` 상단의
+> `CUSTOM_PROXY` 에 주소를 넣으세요. 아래 "안정적인 프록시" 참고.
+
+#### GitHub Pages로 호스팅 (무료)
+1. GitHub 저장소 → **Settings → Pages**
+2. **Source**: `Deploy from a branch`, **Branch**: `main` / `/ (root)` 선택 후 Save
+3. 잠시 후 `https://sh5316.github.io/Issuse_collecter/` 에서 열립니다.
+
+#### 안정적인 프록시 (선택, Cloudflare Worker · 무료)
+1. https://dash.cloudflare.com → Workers & Pages → Create Worker
+2. 아래 코드를 붙여넣고 Deploy:
+   ```js
+   export default {
+     async fetch(request) {
+       const url = new URL(request.url).searchParams.get("url");
+       if (!url) return new Response("missing url", { status: 400 });
+       const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+       const body = await r.text();
+       return new Response(body, {
+         headers: { "Access-Control-Allow-Origin": "*", "Content-Type": "text/xml; charset=utf-8" },
+       });
+     },
+   };
+   ```
+3. 발급된 주소를 `index.html` 의 `CUSTOM_PROXY` 에 입력:
+   ```js
+   const CUSTOM_PROXY = "https://your-worker.your-name.workers.dev/?url=";
+   ```
+
 ## 기술 스택
 - Python 3.11 / Streamlit
 - feedparser (RSS 파싱)
