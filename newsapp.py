@@ -200,23 +200,28 @@ def collect_news():
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def translate_to_korean(text: str) -> str:
-    """Google 번역 공개 엔드포인트 사용 (API 키 불필요, SSL 검증 우회)."""
+    """Google 번역 공개 엔드포인트 사용 (API 키 불필요).
+
+    클라우드(정상 인증서)에서는 일반 요청, 로컬(사내망 SSL 문제)에서는
+    인증서 검증을 끈 재시도로 양쪽 환경 모두에서 동작하게 한다.
+    """
     if not text:
         return ""
-    try:
-        resp = requests.get(
-            "https://translate.googleapis.com/translate_a/single",
-            params={
-                "client": "gtx", "sl": "auto", "tl": "ko",
-                "dt": "t", "q": text[:480],
-            },
-            verify=False,
-            timeout=10,
-        )
-        data = resp.json()
-        return "".join(seg[0] for seg in data[0] if seg and seg[0])
-    except Exception:  # noqa: BLE001
-        return ""
+    params = {
+        "client": "gtx", "sl": "auto", "tl": "ko",
+        "dt": "t", "q": text[:480],
+    }
+    url = "https://translate.googleapis.com/translate_a/single"
+    for verify in (True, False):
+        try:
+            resp = requests.get(url, params=params, verify=verify, timeout=10)
+            data = resp.json()
+            return "".join(seg[0] for seg in data[0] if seg and seg[0])
+        except requests.exceptions.SSLError:
+            continue  # 인증서 문제 → 검증 끄고 재시도
+        except Exception:  # noqa: BLE001
+            return ""
+    return ""
 
 
 # ---------------------------------------------------------------------------

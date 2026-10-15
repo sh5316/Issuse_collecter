@@ -36,6 +36,23 @@ python -m venv .venv
 
 브라우저에서 `http://localhost:8501` 이 열립니다.
 
+## 🌐 웹사이트로 배포하기 (Streamlit Community Cloud · 무료)
+
+GitHub 저장소를 그대로 연결해 공개 URL로 실행할 수 있습니다.
+
+1. **https://share.streamlit.io** 접속 후 GitHub 계정으로 로그인
+2. **Create app → Deploy a public app from GitHub** 선택
+3. 아래 정보 입력
+   - Repository: `sh5316/Issuse_collecter`
+   - Branch: `main`
+   - Main file path: `newsapp.py`
+4. (선택) **Advanced settings**에서 Python 버전을 `3.11`로 지정
+5. **Deploy** 클릭 → 잠시 후 `https://<앱이름>.streamlit.app` 주소가 발급됩니다.
+
+> 저장소에 push할 때마다 배포된 앱이 자동으로 갱신됩니다.
+> 필요한 패키지는 `requirements.txt`, 앱 설정은 `.streamlit/config.toml`에서
+> 클라우드가 자동으로 읽어갑니다.
+
 ## 기술 스택
 - Python 3.11 / Streamlit
 - feedparser (RSS 파싱)
